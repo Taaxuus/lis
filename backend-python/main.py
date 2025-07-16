@@ -18,13 +18,16 @@ app = FastAPI(
 # CORS dla komunikacji z frontendem
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js frontend
+    # Next.js frontend na różnych portach
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Modele danych
+
+
 class TreeData(BaseModel):
     id: int
     diameter_breast_height: float  # Pierśnica (cm)
@@ -34,11 +37,13 @@ class TreeData(BaseModel):
     location_x: float  # Współrzędne X
     location_y: float  # Współrzędne Y
 
+
 class ForestStandData(BaseModel):
     stand_id: int
     area: float  # Powierzchnia (ha)
     trees: List[TreeData]
     site_index: Optional[float] = None  # Bonitacja
+
 
 class TelemetryData(BaseModel):
     data_type: str  # "lidar" lub "spectral"
@@ -47,12 +52,17 @@ class TelemetryData(BaseModel):
     resolution: float  # m/pixel lub points/m2
     file_path: str
 
+
 # Przykładowe dane testowe
 test_trees = [
-    TreeData(id=1, diameter_breast_height=25.5, height=18.2, species="Sosna zwyczajna", age=45, location_x=100.5, location_y=200.3),
-    TreeData(id=2, diameter_breast_height=32.1, height=22.5, species="Świerk pospolity", age=52, location_x=105.2, location_y=198.7),
-    TreeData(id=3, diameter_breast_height=28.7, height=20.1, species="Dąb szypułkowy", age=65, location_x=98.3, location_y=205.1),
-    TreeData(id=4, diameter_breast_height=22.3, height=16.8, species="Brzoza brodawkowata", age=35, location_x=102.7, location_y=202.5),
+    TreeData(id=1, diameter_breast_height=25.5, height=18.2,
+             species="Sosna zwyczajna", age=45, location_x=100.5, location_y=200.3),
+    TreeData(id=2, diameter_breast_height=32.1, height=22.5,
+             species="Świerk pospolity", age=52, location_x=105.2, location_y=198.7),
+    TreeData(id=3, diameter_breast_height=28.7, height=20.1,
+             species="Dąb szypułkowy", age=65, location_x=98.3, location_y=205.1),
+    TreeData(id=4, diameter_breast_height=22.3, height=16.8,
+             species="Brzoza brodawkowata", age=35, location_x=102.7, location_y=202.5),
 ]
 
 test_forest_stand = ForestStandData(
@@ -79,6 +89,7 @@ test_telemetry = [
     )
 ]
 
+
 @app.get("/")
 async def root():
     return {
@@ -87,15 +98,19 @@ async def root():
         "description": "API do obliczeń parametrów drzew i drzewostanów"
     }
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now()}
 
 # Endpointy dla danych drzew
+
+
 @app.get("/trees", response_model=List[TreeData])
 async def get_trees():
     """Pobierz wszystkie dane drzew"""
     return test_trees
+
 
 @app.get("/trees/{tree_id}", response_model=TreeData)
 async def get_tree(tree_id: int):
@@ -105,6 +120,7 @@ async def get_tree(tree_id: int):
         raise HTTPException(status_code=404, detail="Drzewo nie znalezione")
     return tree
 
+
 @app.post("/trees/volume")
 async def calculate_tree_volume(tree: TreeData):
     """Oblicz miąższość drzewa na podstawie pierśnicy i wysokości"""
@@ -112,7 +128,7 @@ async def calculate_tree_volume(tree: TreeData):
     # gdzie f to współczynnik kształtu (przyjęty 0.5)
     diameter_m = tree.diameter_breast_height / 100
     volume = math.pi * (diameter_m / 2) ** 2 * tree.height * 0.5
-    
+
     return {
         "tree_id": tree.id,
         "volume_m3": round(volume, 4),
@@ -122,12 +138,16 @@ async def calculate_tree_volume(tree: TreeData):
     }
 
 # Endpointy dla drzewostanów
+
+
 @app.get("/forest-stands/{stand_id}")
 async def get_forest_stand(stand_id: int):
     """Pobierz dane drzewostanu"""
     if stand_id != 1:
-        raise HTTPException(status_code=404, detail="Drzewostan nie znaleziony")
+        raise HTTPException(
+            status_code=404, detail="Drzewostan nie znaleziony")
     return test_forest_stand
+
 
 @app.post("/forest-stands/analysis")
 async def analyze_forest_stand(stand: ForestStandData):
@@ -137,22 +157,22 @@ async def analyze_forest_stand(stand: ForestStandData):
     species_count = {}
     heights = []
     diameters = []
-    
+
     for tree in stand.trees:
         # Oblicz miąższość każdego drzewa
         diameter_m = tree.diameter_breast_height / 100
         volume = math.pi * (diameter_m / 2) ** 2 * tree.height * 0.5
         total_volume += volume
-        
+
         # Zlicz gatunki
         species_count[tree.species] = species_count.get(tree.species, 0) + 1
-        
+
         heights.append(tree.height)
         diameters.append(tree.diameter_breast_height)
-    
+
     avg_height = sum(heights) / len(heights) if heights else 0
     avg_diameter = sum(diameters) / len(diameters) if diameters else 0
-    
+
     return {
         "stand_id": stand.stand_id,
         "area_ha": stand.area,
@@ -167,10 +187,13 @@ async def analyze_forest_stand(stand: ForestStandData):
     }
 
 # Endpointy dla danych teledetekcyjnych
+
+
 @app.get("/telemetry")
 async def get_telemetry_data():
     """Pobierz dane teledetekcyjne"""
     return test_telemetry
+
 
 @app.get("/telemetry/lidar")
 async def get_lidar_data():
@@ -178,22 +201,24 @@ async def get_lidar_data():
     lidar_data = [t for t in test_telemetry if t.data_type == "lidar"]
     return lidar_data
 
+
 @app.get("/telemetry/spectral")
 async def get_spectral_data():
     """Pobierz dane ze zobrazowań spektralnych"""
     spectral_data = [t for t in test_telemetry if t.data_type == "spectral"]
     return spectral_data
 
+
 @app.post("/telemetry/process")
 async def process_telemetry_data(data_type: str, area: float):
     """Symulacja przetwarzania danych teledetekcyjnych"""
     if data_type not in ["lidar", "spectral"]:
         raise HTTPException(status_code=400, detail="Nieprawidłowy typ danych")
-    
+
     # Symulacja obliczeń
     processing_time = area * 0.5  # sekundy
     detected_trees = int(area * random.uniform(150, 300))  # drzewa/ha
-    
+
     return {
         "data_type": data_type,
         "processed_area_km2": area,
@@ -204,6 +229,8 @@ async def process_telemetry_data(data_type: str, area: float):
     }
 
 # Endpoint do komunikacji z backendem R
+
+
 @app.get("/r-backend/status")
 async def check_r_backend():
     """Sprawdź status backendu R"""

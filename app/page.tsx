@@ -59,7 +59,7 @@ export default function Home() {
 
 		// Sprawdź backend R
 		try {
-			const rResponse = await fetch("http://localhost:8001/status");
+			const rResponse = await fetch("http://localhost:8002/status");
 			if (rResponse.ok) {
 				setBackendStatus((prev) => ({
 					...prev,
@@ -115,7 +115,7 @@ export default function Home() {
 
 				// Analiza z backendem R
 				const rResponse = await fetch(
-					"http://localhost:8001/analyze/forest-stand",
+					"http://localhost:8002/analyze/forest-stand",
 					{
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
