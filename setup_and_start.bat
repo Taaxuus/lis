@@ -34,7 +34,7 @@ if errorlevel 1 (
 )
 
 REM Sprawdź R
-"C:\Program Files\R\R-4.5.1\bin\Rscript.exe" --version >nul 2>&1
+"C:\Program Files\R\R-4.5.1\bin\x64\Rscript.exe" --version >nul 2>&1
 if errorlevel 1 (
     echo BŁĄD: R nie jest zainstalowany!
     echo Pobierz z: https://r-project.org/
@@ -65,10 +65,10 @@ if not exist "backend-python\.venv" (
 
 REM Sprawdź pakiety R
 echo Sprawdzanie pakietów R...
-"C:\Program Files\R\R-4.5.1\bin\Rscript.exe" -e "if(!require('plumber', quietly=TRUE)) install.packages('plumber', repos='https://cran.r-project.org')" >nul 2>&1
-"C:\Program Files\R\R-4.5.1\bin\Rscript.exe" -e "if(!require('dplyr', quietly=TRUE)) install.packages('dplyr', repos='https://cran.r-project.org')" >nul 2>&1
-"C:\Program Files\R\R-4.5.1\bin\Rscript.exe" -e "if(!require('httr', quietly=TRUE)) install.packages('httr', repos='https://cran.r-project.org')" >nul 2>&1
-"C:\Program Files\R\R-4.5.1\bin\Rscript.exe" -e "if(!require('jsonlite', quietly=TRUE)) install.packages('jsonlite', repos='https://cran.r-project.org')" >nul 2>&1
+"C:\Program Files\R\R-4.5.1\bin\x64\Rscript.exe" -e "if(!require('plumber', quietly=TRUE)) install.packages('plumber', repos='https://cran.r-project.org')" >nul 2>&1
+"C:\Program Files\R\R-4.5.1\bin\x64\Rscript.exe" -e "if(!require('dplyr', quietly=TRUE)) install.packages('dplyr', repos='https://cran.r-project.org')" >nul 2>&1
+"C:\Program Files\R\R-4.5.1\bin\x64\Rscript.exe" -e "if(!require('httr', quietly=TRUE)) install.packages('httr', repos='https://cran.r-project.org')" >nul 2>&1
+"C:\Program Files\R\R-4.5.1\bin\x64\Rscript.exe" -e "if(!require('jsonlite', quietly=TRUE)) install.packages('jsonlite', repos='https://cran.r-project.org')" >nul 2>&1
 
 echo ✅ Setup zakończony!
 echo.
@@ -84,7 +84,7 @@ timeout /t 3 /nobreak >nul
 
 echo [2/3] Backend R (Plumber)...
 cd backend-r  
-start "webLIS R Backend" cmd /k "\"C:\Program Files\R\R-4.5.1\bin\Rscript.exe\" server.R"
+start "webLIS R Backend" cmd /k "start_r_backend.bat"
 cd ..
 
 timeout /t 3 /nobreak >nul
@@ -101,7 +101,7 @@ echo =================================
 echo.
 echo 🌐 Frontend: http://localhost:3000
 echo 🐍 Python API: http://localhost:8000/docs  
-echo 📊 R API: http://localhost:8002/__docs__/
+echo 📊 R API: http://localhost:8001/__docs__/
 echo.
 echo Sprawdź status w przeglądarce:
 echo http://localhost:3000

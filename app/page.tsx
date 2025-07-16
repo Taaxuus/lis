@@ -59,7 +59,7 @@ export default function Home() {
 
 		// Sprawdź backend R
 		try {
-			const rResponse = await fetch("http://localhost:8002/status");
+			const rResponse = await fetch("http://localhost:8001/status");
 			if (rResponse.ok) {
 				setBackendStatus((prev) => ({
 					...prev,
@@ -76,14 +76,18 @@ export default function Home() {
 
 	const loadTestData = async () => {
 		setLoading(true);
+		console.log("🔄 Ładowanie danych testowych...");
 		try {
 			const response = await fetch("http://localhost:8000/trees");
 			if (response.ok) {
 				const data = await response.json();
+				console.log("✅ Dane załadowane:", data);
 				setTrees(data);
+			} else {
+				console.error("❌ Błąd response:", response.status);
 			}
 		} catch (error) {
-			console.error("Błąd ładowania danych:", error);
+			console.error("❌ Błąd ładowania danych:", error);
 		}
 		setLoading(false);
 	};
@@ -95,48 +99,85 @@ export default function Home() {
 		}
 
 		setLoading(true);
+		console.log("🔬 Rozpoczynam analizę drzewostanu...");
+
 		try {
 			// Analiza z backendem Python
+			console.log("📊 Wysyłam dane do Python backend...");
+			const pythonPayload = {
+				stand_id: 1,
+				area: 2.5,
+				trees: trees,
+			};
+			console.log("Python payload:", pythonPayload);
+
 			const pythonResponse = await fetch(
 				"http://localhost:8000/forest-stands/analysis",
 				{
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						stand_id: 1,
-						area: 2.5,
-						trees: trees,
-					}),
+					body: JSON.stringify(pythonPayload),
 				}
 			);
 
-			if (pythonResponse.ok) {
-				const pythonData = await pythonResponse.json();
+			console.log("Python response status:", pythonResponse.status);
 
-				// Analiza z backendem R
-				const rResponse = await fetch(
-					"http://localhost:8002/analyze/forest-stand",
-					{
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ trees: trees }),
-					}
-				);
-
-				if (rResponse.ok) {
-					const rData = await rResponse.json();
-
-					setAnalysis({
-						total_trees: pythonData.total_trees,
-						average_height_m: rData.summary.average_height_m,
-						average_diameter_cm: rData.summary.average_dbh_cm,
-						total_volume_m3: rData.summary.total_volume_m3,
-						species_composition: pythonData.species_composition,
-					});
-				}
+			if (!pythonResponse.ok) {
+				const errorText = await pythonResponse.text();
+				console.error("❌ Python backend error:", errorText);
+				alert(`Błąd Python backend: ${pythonResponse.status} - ${errorText}`);
+				setLoading(false);
+				return;
 			}
+
+			const pythonData = await pythonResponse.json();
+			console.log("✅ Python data received:", pythonData);
+
+			// Analiza z backendem R
+			console.log("📈 Wysyłam dane do R backend...");
+			const rPayload = { trees: trees };
+			console.log("R payload:", rPayload);
+
+			const rResponse = await fetch(
+				"http://localhost:8001/analyze/forest-stand",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify(rPayload),
+				}
+			);
+
+			console.log("R response status:", rResponse.status);
+
+			if (!rResponse.ok) {
+				const errorText = await rResponse.text();
+				console.error("❌ R backend error:", errorText);
+				alert(`Błąd R backend: ${rResponse.status} - ${errorText}`);
+				setLoading(false);
+				return;
+			}
+
+			const rData = await rResponse.json();
+			console.log("✅ R data received:", rData);
+
+			// Kombinuj wyniki
+			const analysisResult = {
+				total_trees: pythonData.total_trees,
+				average_height_m: rData.summary?.average_height_m || 0,
+				average_diameter_cm: rData.summary?.average_dbh_cm || 0,
+				total_volume_m3: rData.summary?.total_volume_m3 || 0,
+				species_composition: pythonData.species_composition,
+			};
+
+			console.log("🎯 Final analysis result:", analysisResult);
+			setAnalysis(analysisResult);
 		} catch (error) {
-			console.error("Błąd analizy:", error);
+			console.error("❌ Błąd analizy:", error);
+			alert(
+				`Wystąpił błąd podczas analizy: ${
+					error instanceof Error ? error.message : "Nieznany błąd"
+				}`
+			);
 		}
 		setLoading(false);
 	};
@@ -231,58 +272,84 @@ export default function Home() {
 					<div className="flex flex-wrap gap-4 mb-8">
 						<button
 							onClick={checkBackendStatus}
-							className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-							Sprawdź status backendów
+							className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-medium border border-blue-700">
+							🔍 Sprawdź status backendów
 						</button>
 
 						<button
 							onClick={loadTestData}
 							disabled={loading}
-							className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50">
-							{loading ? "Ładowanie..." : "Załaduj dane testowe"}
+							className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 shadow-md font-medium border border-green-700">
+							{loading ? "⏳ Ładowanie..." : "📊 Załaduj dane testowe"}
 						</button>
 
 						<button
 							onClick={analyzeForest}
 							disabled={loading || trees.length === 0}
-							className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50">
-							{loading ? "Analizowanie..." : "Analizuj drzewostan"}
+							className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 shadow-md font-medium border border-purple-700">
+							{loading ? "⚙️ Analizowanie..." : "🔬 Analizuj drzewostan"}
 						</button>
 					</div>
 
 					{/* Wyniki */}
 					{trees.length > 0 && (
 						<div className="mb-8">
-							<h3 className="text-lg font-semibold mb-4">
+							<h3 className="text-lg font-semibold mb-4 text-gray-800">
 								Załadowane dane ({trees.length} drzew)
 							</h3>
-							<div className="overflow-x-auto">
+							<div className="overflow-x-auto bg-white rounded-lg border border-gray-200 shadow-sm">
 								<table className="w-full text-sm">
-									<thead className="bg-gray-50">
+									<thead className="bg-gray-100 border-b border-gray-200">
 										<tr>
-											<th className="p-2 text-left">ID</th>
-											<th className="p-2 text-left">Gatunek</th>
-											<th className="p-2 text-left">Pierśnica (cm)</th>
-											<th className="p-2 text-left">Wysokość (m)</th>
-											<th className="p-2 text-left">Wiek</th>
+											<th className="p-4 text-left font-semibold text-gray-700">
+												ID
+											</th>
+											<th className="p-4 text-left font-semibold text-gray-700">
+												Gatunek
+											</th>
+											<th className="p-4 text-left font-semibold text-gray-700">
+												Pierśnica (cm)
+											</th>
+											<th className="p-4 text-left font-semibold text-gray-700">
+												Wysokość (m)
+											</th>
+											<th className="p-4 text-left font-semibold text-gray-700">
+												Wiek
+											</th>
 										</tr>
 									</thead>
 									<tbody>
-										{trees.slice(0, 5).map((tree) => (
-											<tr key={tree.id} className="border-t">
-												<td className="p-2">{tree.id}</td>
-												<td className="p-2">{tree.species}</td>
-												<td className="p-2">{tree.diameter_breast_height}</td>
-												<td className="p-2">{tree.height}</td>
-												<td className="p-2">{tree.age || "N/A"}</td>
+										{trees.slice(0, 5).map((tree, index) => (
+											<tr
+												key={tree.id}
+												className={`border-b border-gray-100 ${
+													index % 2 === 0 ? "bg-white" : "bg-gray-50"
+												} hover:bg-blue-50 transition-colors`}>
+												<td className="p-4 font-medium text-gray-900">
+													{tree.id}
+												</td>
+												<td className="p-4 text-gray-800 font-medium">
+													{tree.species}
+												</td>
+												<td className="p-4 text-gray-900 font-mono">
+													{tree.diameter_breast_height}
+												</td>
+												<td className="p-4 text-gray-900 font-mono">
+													{tree.height}
+												</td>
+												<td className="p-4 text-gray-700">
+													{tree.age || "N/A"}
+												</td>
 											</tr>
 										))}
 									</tbody>
 								</table>
 								{trees.length > 5 && (
-									<p className="text-sm text-gray-500 mt-2">
-										... i {trees.length - 5} więcej
-									</p>
+									<div className="p-4 bg-gray-50 border-t border-gray-200">
+										<p className="text-sm text-gray-600 font-medium">
+											... i {trees.length - 5} więcej drzew
+										</p>
+									</div>
 								)}
 							</div>
 						</div>
@@ -290,39 +357,63 @@ export default function Home() {
 
 					{analysis && (
 						<div className="grid md:grid-cols-2 gap-6">
-							<div>
-								<h3 className="text-lg font-semibold mb-4">
+							<div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+								<h3 className="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">
 									Wyniki analizy drzewostanu
 								</h3>
-								<div className="space-y-2 text-sm">
-									<p>
-										<span className="font-medium">Liczba drzew:</span>{" "}
-										{analysis.total_trees}
-									</p>
-									<p>
-										<span className="font-medium">Średnia wysokość:</span>{" "}
-										{analysis.average_height_m} m
-									</p>
-									<p>
-										<span className="font-medium">Średnia pierśnica:</span>{" "}
-										{analysis.average_diameter_cm} cm
-									</p>
-									<p>
-										<span className="font-medium">Całkowita miąższość:</span>{" "}
-										{analysis.total_volume_m3} m³
-									</p>
+								<div className="space-y-3 text-sm">
+									<div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+										<span className="font-medium text-gray-700">
+											Liczba drzew:
+										</span>
+										<span className="font-bold text-gray-900 text-lg">
+											{analysis.total_trees}
+										</span>
+									</div>
+									<div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+										<span className="font-medium text-gray-700">
+											Średnia wysokość:
+										</span>
+										<span className="font-bold text-gray-900 text-lg">
+											{analysis.average_height_m} m
+										</span>
+									</div>
+									<div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+										<span className="font-medium text-gray-700">
+											Średnia pierśnica:
+										</span>
+										<span className="font-bold text-gray-900 text-lg">
+											{analysis.average_diameter_cm} cm
+										</span>
+									</div>
+									<div className="flex justify-between items-center p-3 bg-gray-50 rounded">
+										<span className="font-medium text-gray-700">
+											Całkowita miąższość:
+										</span>
+										<span className="font-bold text-gray-900 text-lg">
+											{analysis.total_volume_m3} m³
+										</span>
+									</div>
 								</div>
 							</div>
 
-							<div>
-								<h3 className="text-lg font-semibold mb-4">Skład gatunkowy</h3>
-								<div className="space-y-1 text-sm">
+							<div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+								<h3 className="text-lg font-semibold mb-4 text-gray-800 border-b border-gray-200 pb-2">
+									Skład gatunkowy
+								</h3>
+								<div className="space-y-2">
 									{Object.entries(analysis.species_composition).map(
 										([species, count]) => (
-											<p key={species}>
-												<span className="font-medium">{species}:</span> {count}{" "}
-												szt.
-											</p>
+											<div
+												key={species}
+												className="flex justify-between items-center p-3 bg-gray-50 rounded hover:bg-gray-100 transition-colors">
+												<span className="font-medium text-gray-700">
+													{species}:
+												</span>
+												<span className="font-bold text-gray-900 text-lg">
+													{count} szt.
+												</span>
+											</div>
 										)
 									)}
 								</div>

@@ -1,13 +1,13 @@
-# webLIS R Backend - Główny serwer Plumber
+# webLIS R Backend - Nowoczesny Plumber API
 # Port: 8001
 
-cat("=== webLIS R Backend ===\n")
+cat("=== webLIS R Backend v2 ===\n")
 cat("Sprawdzanie środowiska...\n")
 
 # Sprawdź working directory
 cat("Working directory:", getwd(), "\n")
 
-# Sprawdź wymagane pakiety i zainstaluj jeśli potrzeba
+# Sprawdź wymagane pakiety
 required_packages <- c("plumber", "jsonlite")
 
 for(pkg in required_packages) {
@@ -19,14 +19,16 @@ for(pkg in required_packages) {
   cat(paste("✅", pkg, "OK\n"))
 }
 
-# Definicja API bezpośrednio w pliku
-library(plumber)
+# Nowy API z annotation-based approach
+#* @apiTitle webLIS Backend R
+#* @apiDescription API do obliczeń dendrometrycznych
+#* @apiVersion 1.0.0
 
 #* Status API
 #* @get /status
 function() {
   list(
-    message = "webLIS Backend R - Plumber",
+    message = "webLIS Backend R - Plumber v2",
     version = "1.0.0",
     status = "active",
     port = 8001,
@@ -48,101 +50,24 @@ function() {
 #* @get /test
 function() {
   list(
-    message = "Backend R działa poprawnie!",
+    message = "Backend R v2 działa poprawnie!",
     test = "OK"
   )
 }
 
-#* Obliczanie miąższości drzewa
-#* @post /calculate/volume
-#* @param dbh:numeric Pierśnica w cm  
-#* @param height:numeric Wysokość w metrach
-function(dbh, height) {
-  dbh <- as.numeric(dbh)
-  height <- as.numeric(height)
+#* Analiza drzewostanu
+#* @post /analyze/forest-stand
+#* @param trees:object Lista drzew do analizy
+function(trees) {
+  cat("🔄 Otrzymano request do /analyze/forest-stand (v2)\n")
   
-  if (is.na(dbh) || is.na(height)) {
-    return(list(error = "Nieprawidłowe parametry"))
-  }
-  
-  # Prosta formuła miąższości (Huber)
-  diameter_m <- dbh / 100
-  volume <- pi * (diameter_m / 2)^2 * height * 0.5
-  
-  list(
-    dbh_cm = dbh,
-    height_m = height,
-    volume_m3 = round(volume, 4),
-    calculated_at = Sys.time()
-  )
-}
-
-# Utworzenie API
-cat("Tworzenie API...\n")
-pr <- plumber$new()
-
-# Dodanie endpointów
-pr$handle("GET", "/status", function() {
-  list(
-    message = "webLIS Backend R - Plumber",
-    version = "1.0.0", 
-    status = "active",
-    port = 8001,
-    timestamp = Sys.time()
-  )
-})
-
-pr$handle("GET", "/health", function() {
-  list(
-    status = "healthy",
-    r_version = R.version.string,
-    timestamp = Sys.time()
-  )
-})
-
-pr$handle("GET", "/test", function() {
-  list(
-    message = "Backend R działa poprawnie!",
-    test = "OK"
-  )
-})
-
-pr$handle("POST", "/analyze/forest-stand", function(req, res) {
-  cat("🔄 Otrzymano request do /analyze/forest-stand\n")
-  
-  # Sprawdź różne sposoby dostępu do danych
-  body <- NULL
-  
-  # Metoda 1: Sprawdź czy dane są już sparsowane
-  if (!is.null(req$body) && is.list(req$body)) {
-    cat("✅ Użyto sparsowanego body\n")
-    body <- req$body
-  } else if (!is.null(req$postBody)) {
-    # Metoda 2: Parsowanie ręczne z postBody
-    cat("🔄 Parsowanie z postBody...\n")
-    tryCatch({
-      if (is.raw(req$postBody)) {
-        raw_json <- rawToChar(req$postBody)
-      } else {
-        raw_json <- req$postBody
-      }
-      cat("Raw JSON (pierwsze 100 znaków):", substr(raw_json, 1, 100), "\n")
-      body <- jsonlite::fromJSON(raw_json)
-      cat("✅ Parsowanie udane\n")
-    }, error = function(e) {
-      cat("❌ Błąd parsowania JSON:", e$message, "\n")
-      return(list(error = paste("Błąd parsowania JSON:", e$message)))
-    })
-  }
-  
-  if (is.null(body) || is.null(body$trees)) {
+  # Sprawdź dane
+  if (is.null(trees) || length(trees) == 0) {
     cat("❌ Brak danych o drzewach\n")
     return(list(error = "Brak danych o drzewach"))
   }
   
-  trees <- body$trees
-  
-  # Konwertuj do data.frame jeśli to lista
+  # Konwertuj do data.frame jeśli potrzeba
   if (is.list(trees) && !is.data.frame(trees)) {
     trees <- do.call(rbind.data.frame, trees)
   }
@@ -151,6 +76,7 @@ pr$handle("POST", "/analyze/forest-stand", function(req, res) {
   
   # Podstawowe statystyki
   total_trees <- nrow(trees)
+  cat("Liczba drzew:", total_trees, "\n")
   
   # Oblicz miąższości
   volumes <- sapply(1:total_trees, function(i) {
@@ -179,10 +105,14 @@ pr$handle("POST", "/analyze/forest-stand", function(req, res) {
   
   cat("✅ Analiza zakończona pomyślnie\n")
   return(result)
-})
+}
 
-# CORS
-pr$filter("cors", function(req, res) {
+# Utworzenie i uruchomienie API
+cat("Tworzenie API v2...\n")
+
+# CORS filter
+#* @filter cors
+cors <- function(req, res) {
   res$setHeader("Access-Control-Allow-Origin", "*")
   res$setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
   res$setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
@@ -193,17 +123,19 @@ pr$filter("cors", function(req, res) {
   } else {
     plumber::forward()
   }
-})
+}
 
-cat("✅ API skonfigurowane\n")
+cat("✅ API v2 skonfigurowane\n")
 cat("🚀 Uruchamianie serwera na http://localhost:8001\n")
 cat("📋 Dostępne endpointy:\n")
 cat("   GET  /status - Status serwera\n") 
 cat("   GET  /health - Health check\n")
 cat("   GET  /test   - Test połączenia\n")
+cat("   POST /analyze/forest-stand - Analiza drzewostanu\n")
 cat("-------------------------------------\n")
 
 # Uruchomienie serwera
+pr <- plumb("server_v2.R")
 pr$run(
   host = "0.0.0.0",
   port = 8001

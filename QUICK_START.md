@@ -1,52 +1,76 @@
-# 🚀 Szybki start - webLIS
+# webLIS - Quick Start Guide
 
-## ⚡ NAJSZYBSZA OPCJA (Windows):
+## ⚡ Najszybsza opcja (Windows)
 
-```bash
-git clone https://github.com/Taaxuus/lis.git
-cd lis
-setup_and_start.bat
-```
-
-**Gotowe!** 🎉 Wszystko zostanie zainstalowane i uruchomione automatycznie.
-
-## TL;DR - Uruchom w 5 minut (ręcznie)
-
-### 1. Wymagania
-
-✅ Node.js >= 18  
-✅ Python >= 3.11  
-✅ R >= 4.5
-
-### 2. Sklonuj i uruchom
+### Setup + Start (pierwszy raz)
 
 ```bash
 git clone https://github.com/Taaxuus/lis.git
 cd lis
+.\setup_and_start.bat
 ```
 
-### 3. Frontend (Terminal 1)
+### Start (kolejne uruchomienia)
 
 ```bash
-npm install
+.\start.bat
+```
+
+### Stop
+
+```bash
+.\stop_weblis.bat
+```
+
+## 🌐 Dostęp do aplikacji
+
+| Komponent         | Adres                           |
+| ----------------- | ------------------------------- |
+| 🖥️ **Frontend**   | http://localhost:3000           |
+| 🐍 **Python API** | http://localhost:8000/docs      |
+| 📊 **R API**      | http://localhost:8001/**docs**/ |
+
+## ✅ Test działania
+
+```bash
+# Test Python backend
+curl http://localhost:8000/health
+
+# Test R backend
+curl http://localhost:8001/status
+```
+
+## 🛠️ Ręczne uruchomienie (jeśli potrzebujesz)
+
+```bash
+# Terminal 1 - Frontend
 npm run dev
+
+# Terminal 2 - Python Backend
+cd backend-python && .venv\Scripts\activate && uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+# Terminal 3 - R Backend
+cd backend-r && .\start_r_backend.bat
 ```
 
-➡️ http://localhost:3001
+## � Rozwiązywanie problemów
 
-### 4. Python Backend (Terminal 2)
+### Backend R nie startuje
+
+1. Sprawdź czy R jest w: `C:\Program Files\R\R-4.5.1\`
+2. Uruchom z katalogu backend-r: `.\start_r_backend.bat`
+
+### Porty zajęte
 
 ```bash
-cd backend-python
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1  # Windows
-pip install fastapi uvicorn requests pydantic
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+netstat -an | findstr ":8000"
+netstat -an | findstr ":8001"
+netstat -an | findstr ":3000"
 ```
 
-➡️ http://localhost:8000
+### Zatrzymanie
 
-### 5. R Backend (Terminal 3)
+- Zamknij okna terminali lub użyj `.\stop_weblis.bat`
 
 ```bash
 # Najpierw w R:
