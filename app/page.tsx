@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface BackendStatus {
 	python: { status: string; message?: string };
@@ -194,6 +195,15 @@ export default function Home() {
 					<p className="text-sm text-gray-600">
 						System analityczny z wykorzystaniem danych teledetekcyjnych
 					</p>
+
+					{/* Nawigacja */}
+					<div className="mt-6 flex justify-center space-x-4">
+						<Link
+							href="/mapa"
+							className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md font-medium border border-blue-700 flex items-center">
+							🗺️ Mapa Interaktywna
+						</Link>
+					</div>
 				</div>
 
 				{/* Status backendów */}
