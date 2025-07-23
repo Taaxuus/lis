@@ -1,34 +1,32 @@
-# webLIS - Aplikacja webowa do obliczeń parametrów drzew i drzewostanów
+# webLIS - Kompletny przewodnik
 
 System analityczny z wykorzystaniem danych teledetekcyjnych dla leśnictwa.
 
-## � Szybkie uruchomienie (Windows)
+## 🚀 SZYBKIE URUCHOMIENIE (Windows)
 
-### Setup + Start (pierwszy raz)
+### ⚡ Pierwszy raz (setup + start)
 
 ```bash
+git clone https://github.com/Taaxuus/lis.git
+cd lis
 .\setup_and_start.bat
 ```
 
-### Tylko start (kolejne uruchomienia)
+### 🔄 Kolejne uruchomienia
 
 ```bash
 .\start.bat
 ```
 
-### Stop
+### ⏹️ Zatrzymanie
 
 ```bash
 .\stop_weblis.bat
 ```
 
-## 🏗️ Architektura
+## 📋 WYMAGANIA
 
-- **Frontend**: Next.js 15 (React 19, TypeScript + Tailwind CSS) - **port 3000**
-- **Backend Python**: FastAPI (zarządzanie danymi) - **port 8000**
-- **Backend R**: Plumber (obliczenia dendrometryczne) - **port 8001**
-
-## 📋 Wymagania
+### Oprogramowanie:
 
 - **Node.js** >= 18.0.0
 - **Python** >= 3.11
@@ -42,38 +40,60 @@ python --version
 R --version
 ```
 
-## 🌐 Dostęp
+## �️ ARCHITEKTURA
 
-| Komponent         | Adres                           | Opis             |
-| ----------------- | ------------------------------- | ---------------- |
-| 🖥️ **Frontend**   | http://localhost:3000           | Główna aplikacja |
-| 🐍 **Python API** | http://localhost:8000/docs      | FastAPI docs     |
-| 📊 **R API**      | http://localhost:8001/**docs**/ | Plumber docs     |
+| Komponent          | Technologia             | Port | Funkcje                                   |
+| ------------------ | ----------------------- | ---- | ----------------------------------------- |
+| **Frontend**       | Next.js 15 + TypeScript | 3000 | Interfejs użytkownika, wizualizacja       |
+| **Backend Python** | FastAPI                 | 8000 | Zarządzanie danymi, podstawowe obliczenia |
+| **Backend R**      | Plumber                 | 8001 | Obliczenia dendrometryczne, modelowanie   |
 
-## ✅ Test działania
+## 🌐 DOSTĘP DO APLIKACJI
+
+| Komponent               | Adres                           | Opis                 |
+| ----------------------- | ------------------------------- | -------------------- |
+| 🖥️ **Aplikacja główna** | http://localhost:3000           | Interfejs webLIS     |
+| 🐍 **Python API**       | http://localhost:8000/docs      | Dokumentacja FastAPI |
+| 📊 **R API**            | http://localhost:8001/**docs**/ | Dokumentacja Plumber |
+
+## ✅ TEST DZIAŁANIA
+
+### Szybki test:
 
 ```bash
-# Test Python
+# Test Python backend
 curl http://localhost:8000/health
 
-# Test R
+# Test R backend
 curl http://localhost:8001/status
 ```
 
-## 🛠️ Ręczne uruchomienie (3 terminale)
+### Test w aplikacji:
+
+1. Otwórz http://localhost:3000
+2. Sprawdź zielone statusy backendów
+3. Kliknij "Załaduj dane testowe"
+4. Kliknij "Analizuj drzewostan"
+
+## 🛠️ RĘCZNE URUCHOMIENIE (jeśli potrzebujesz)
+
+Otwórz 3 terminale i uruchom po kolei:
 
 ```bash
 # Terminal 1 - Frontend
 npm run dev
 
 # Terminal 2 - Python Backend
-cd backend-python && .venv\Scripts\activate && uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+cd backend-python
+.venv\Scripts\activate
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 # Terminal 3 - R Backend
-cd backend-r && .\start_r_backend.bat
+cd backend-r
+.\start_r_backend.bat
 ```
 
-## 📁 Struktura
+## 📁 STRUKTURA PROJEKTU
 
 ```
 lis/
@@ -81,18 +101,108 @@ lis/
 ├── start.bat              # Start (kolejne razy)
 ├── stop_weblis.bat        # Stop wszystkich serwisów
 ├── app/                   # Frontend Next.js
+│   ├── layout.tsx         # Layout główny
+│   ├── page.tsx          # Strona główna
+│   └── globals.css       # Style globalne
 ├── backend-python/        # Backend FastAPI
+│   ├── main.py           # Główny serwer Python
+│   └── requirements.txt  # Zależności Python
 └── backend-r/             # Backend Plumber R
-    ├── server.R           # Główny serwer R
+    ├── server.R          # Główny serwer R (port 8001)
     └── start_r_backend.bat # Skrypt uruchamiający R
 ```
 
-## 🎯 Funkcjonalności
+## 🎯 FUNKCJONALNOŚCI
 
-- **Python**: Zarządzanie danymi, podstawowe obliczenia
-- **R**: Zaawansowane obliczenia dendrometryczne, analiza struktury
-- **Frontend**: Interfejs użytkownika, wizualizacja danych
+### Backend Python (FastAPI):
+
+- ✅ Zarządzanie danymi drzew
+- ✅ Podstawowe obliczenia miąższości
+- ✅ Analiza parametrów drzewostanów
+- ✅ Symulacja przetwarzania danych teledetekcyjnych
+- ✅ CORS dla komunikacji z frontendem
+
+### Backend R (Plumber):
+
+- ✅ Zaawansowane obliczenia dendrometryczne (Huber, Smalian)
+- ✅ Analiza struktury pionowej drzewostanu
+- ✅ Predykcja wysokości na podstawie pierśnicy
+- ✅ Analiza rozkładu przestrzennego drzew
+- ✅ Modelowanie wzrostu drzewostanu
+
+### Frontend (Next.js):
+
+- ✅ Responsywny interfejs użytkownika
+- ✅ Monitoring statusu backendów
+- ✅ Interaktywne panele testowe
+- ✅ Wizualizacja danych i wyników analiz
+- ✅ Komunikacja z obiema API
+
+## 🔧 ROZWIĄZYWANIE PROBLEMÓW
+
+### Port zajęty?
+
+```bash
+# Sprawdź zajęte porty
+netstat -ano | findstr ":3000"
+netstat -ano | findstr ":8000"
+netstat -ano | findstr ":8001"
+
+# Zabij proces (zamień [PID] na numer procesu)
+taskkill /PID [PID] /F
+```
+
+### Backend R nie startuje?
+
+```bash
+# Sprawdź ścieżkę do R
+where R
+
+# Uruchom z pełną ścieżką
+& 'C:\Program Files\R\R-4.5.1\bin\Rscript.exe' server.R
+```
+
+### Python venv problem?
+
+```bash
+# Odśwież pip i recreate venv
+python -m pip install --upgrade pip
+python -m venv .venv --clear
+```
+
+### Frontend nie startuje?
+
+```bash
+# Wyczyść cache i reinstall
+npm cache clean --force
+rm -rf node_modules package-lock.json
+npm install
+```
+
+## 📊 API ENDPOINTS
+
+### Python FastAPI:
+
+- `GET /health` - status backendu
+- `GET /trees` - dane testowe drzew
+- `POST /forest-stands/analysis` - analiza drzewostanu
+
+### R Plumber:
+
+- `GET /status` - status backendu
+- `POST /analyze/forest-stand` - analiza statystyczna
+- `POST /calculate/volume` - obliczenia miąższości
+- `POST /model/growth` - modelowanie wzrostu
+
+## 📈 STATUS PROJEKTU
+
+- ✅ **Backend R (Plumber)** - działa na porcie 8001
+- ✅ **Backend Python (FastAPI)** - działa na porcie 8000
+- ✅ **Frontend (Next.js)** - działa na porcie 3000
+- ✅ **Ujednolicone porty i skrypty startowe**
+- ✅ **Kompletna dokumentacja w jednym pliku**
 
 ---
 
-**webLIS** - System analityczny dla leśnictwa
+**webLIS v2.0** - System analityczny dla leśnictwa  
+**Data aktualizacji**: 2025-07-23
