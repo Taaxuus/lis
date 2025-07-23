@@ -120,13 +120,19 @@ lis/
 ├── setup_and_start.bat    # Setup + Start (pierwszy raz)
 ├── start.bat              # Start (kolejne razy)
 ├── stop_weblis.bat        # Stop wszystkich serwisów
+├── diagnoza_srodowiska.bat # Diagnostyka kompletnego środowiska
+├── test_python_env.bat    # Test środowiska Python
+├── napraw_python.bat      # Naprawa środowiska Python
 ├── app/                   # Frontend Next.js
 │   ├── layout.tsx         # Layout główny
 │   ├── page.tsx          # Strona główna
-│   └── globals.css       # Style globalne
+│   ├── mapa/             # Podstrona z mapą
+│   │   └── page.tsx      # Interaktywna mapa OpenLayers
+│   └── globals.css       # Style globalne + OpenLayers CSS
 ├── backend-python/        # Backend FastAPI
 │   ├── main.py           # Główny serwer Python
-│   └── requirements.txt  # Zależności Python
+│   ├── requirements.txt  # Zależności Python
+│   └── .venv/            # Środowisko wirtualne (auto-generowane)
 └── backend-r/             # Backend Plumber R
     ├── server.R          # Główny serwer R (port 8001)
     └── start_r_backend.bat # Skrypt uruchamiający R
@@ -160,6 +166,32 @@ lis/
 
 ## 🔧 ROZWIĄZYWANIE PROBLEMÓW
 
+### 🐍 Problemy z Python?
+
+**NAJCZĘSTSZE ROZWIĄZANIA:**
+
+1. **Test środowiska:** `test_python_env.bat` - sprawdza wszystkie komponenty Python
+2. **Automatyczna naprawa:** `napraw_python.bat` - usuwa i odtwarza środowisko Python
+3. **Diagnostyka:** `diagnoza_srodowiska.bat` - sprawdza całe środowisko
+
+**RĘCZNE ROZWIĄZANIA:**
+
+```bash
+# Problem: środowisko nie tworzy się
+cd backend-python
+rmdir /s /q .venv
+python -m venv .venv
+call .venv\Scripts\activate.bat
+pip install fastapi uvicorn requests pydantic
+
+# Problem: pip nie działa
+python -m ensurepip --upgrade
+python -m pip install --upgrade pip
+
+# Problem: pakiety nie instalują się
+pip install --user fastapi uvicorn requests pydantic
+```
+
 ### Port zajęty?
 
 ```bash
@@ -180,14 +212,6 @@ where R
 
 # Uruchom z pełną ścieżką
 & 'C:\Program Files\R\R-4.5.1\bin\Rscript.exe' server.R
-```
-
-### Python venv problem?
-
-```bash
-# Odśwież pip i recreate venv
-python -m pip install --upgrade pip
-python -m venv .venv --clear
 ```
 
 ### Frontend nie startuje?

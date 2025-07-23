@@ -18,11 +18,18 @@ echo [SETUP] Sprawdzanie wymagań...
 REM Sprawdź Node.js
 node --version >nul 2>&1
 if errorlevel 1 (
-    echo BŁĄD: Node.js nie jest zainstalowany!
-    echo Pobierz z: https://nodejs.org/
+    echo ❌ BŁĄD: Node.js nie jest zainstalowany!
+    echo.
+    echo ROZWIĄZANIE:
+    echo - Zainstaluj Node.js z: https://nodejs.org/
+    echo - WAŻNE: Podczas instalacji zaznacz "Add to PATH"
+    echo - Sprawdź środowisko: diagnoza_srodowiska.bat
+    echo.
     pause
     exit /b 1
 )
+
+echo ✅ Node.js znaleziony
 
 REM Sprawdź Python - różne możliwe lokalizacje
 set PYTHON_CMD=
@@ -56,8 +63,13 @@ if not errorlevel 1 (
     goto python_found
 )
 
-echo BŁĄD: Python nie został znaleziony!
-echo Sprawdź czy Python jest zainstalowany i dodany do PATH
+echo ❌ BŁĄD: Python nie został znaleziony!
+echo.
+echo ROZWIĄZANIE:
+echo - Zainstaluj Python z: https://python.org/
+echo - WAŻNE: Podczas instalacji zaznacz "Add Python to PATH"
+echo - Sprawdź środowisko: diagnoza_srodowiska.bat
+echo.
 echo Możliwe lokalizacje:
 echo - python (w PATH)
 echo - py (Python Launcher)
@@ -65,8 +77,6 @@ echo - python3 (w PATH)
 echo - C:\Python\python.exe
 echo - C:\Python3\python.exe
 echo.
-echo Pobierz Python z: https://python.org/
-echo WAŻNE: Podczas instalacji zaznacz "Add Python to PATH"
 pause
 exit /b 1
 
@@ -108,14 +118,19 @@ if not errorlevel 1 (
     goto r_found
 )
 
-echo BŁĄD: R nie został znaleziony!
-echo Sprawdź czy R jest zainstalowany w jednej z lokalizacji:
+echo ❌ BŁĄD: R nie został znaleziony!
+echo.
+echo ROZWIĄZANIE:
+echo - Zainstaluj R z: https://r-project.org/
+echo - Sprawdź środowisko: diagnoza_srodowiska.bat
+echo.
+echo Sprawdzane lokalizacje:
 echo - C:\Program Files\R\R-4.5.1\bin\x64\Rscript.exe
 echo - C:\Program Files\R\R-4.4.1\bin\x64\Rscript.exe  
 echo - C:\Program Files\R\R-4.3.1\bin\x64\Rscript.exe
+echo - Automatyczne: C:\Program Files\R\R-*\bin\x64\Rscript.exe
 echo - Rscript w PATH
 echo.
-echo Pobierz R z: https://r-project.org/
 pause
 exit /b 1
 
@@ -137,10 +152,76 @@ REM Konfiguracja środowiska Python
 if not exist "backend-python\.venv" (
     echo Tworzenie środowiska wirtualnego Python...
     cd backend-python
+    
+    echo - Tworzenie .venv za pomocą: %PYTHON_CMD%
     %PYTHON_CMD% -m venv .venv
+    if errorlevel 1 (
+        echo ❌ BŁĄD: Nie można utworzyć środowiska wirtualnego Python!
+        echo.
+        echo ROZWIĄZANIA:
+        echo 1. Sprawdź czy Python ma moduł venv: %PYTHON_CMD% -m venv --help
+        echo 2. Spróbuj: %PYTHON_CMD% -m pip install --upgrade pip
+        echo 3. Sprawdź uprawnienia do folderu backend-python
+        echo 4. Uruchom jako administrator
+        echo 5. Sprawdź środowisko: diagnoza_srodowiska.bat
+        echo.
+        cd ..
+        pause
+        exit /b 1
+    )
+    
+    echo - Aktywacja środowiska wirtualnego...
+    if not exist ".venv\Scripts\activate.bat" (
+        echo ❌ BŁĄD: Plik activate.bat nie został utworzony!
+        echo - Folder .venv może być niepełny
+        echo - Usuń folder .venv i spróbuj ponownie
+        cd ..
+        pause
+        exit /b 1
+    )
+    
     call .venv\Scripts\activate.bat
+    if errorlevel 1 (
+        echo ❌ BŁĄD: Nie można aktywować środowiska wirtualnego!
+        cd ..
+        pause
+        exit /b 1
+    )
+    
+    echo - Sprawdzanie pip...
+    pip --version >nul 2>&1
+    if errorlevel 1 (
+        echo ❌ BŁĄD: Pip nie jest dostępny w środowisku wirtualnym!
+        echo - Próba naprawy...
+        %PYTHON_CMD% -m ensurepip --upgrade
+        if errorlevel 1 (
+            echo ❌ Nie można naprawić pip
+            cd ..
+            pause
+            exit /b 1
+        )
+    )
+    
+    echo - Instalacja pakietów Python...
     pip install fastapi uvicorn requests pydantic
+    if errorlevel 1 (
+        echo ❌ BŁĄD: Nie można zainstalować pakietów Python!
+        echo.
+        echo ROZWIĄZANIA:
+        echo 1. Sprawdź połączenie internetowe
+        echo 2. Spróbuj: pip install --upgrade pip
+        echo 3. Spróbuj: pip install --user fastapi uvicorn requests pydantic
+        echo 4. Sprawdź proxy/firewall
+        echo.
+        cd ..
+        pause
+        exit /b 1
+    )
+    
+    echo ✅ Środowisko Python skonfigurowane pomyślnie!
     cd ..
+) else (
+    echo ✅ Środowisko Python już istnieje
 )
 
 REM Sprawdź pakiety R
@@ -188,7 +269,14 @@ echo http://localhost:3000
 echo.
 echo ⚠️  Aby zatrzymać wszystkie serwisy:
 echo    - Zamknij wszystkie okna terminali
-echo    - Lub użyj stop_weblis.bat
+echo    - Lub użyj: stop_weblis.bat
+echo.
+echo 💡 Kolejne uruchomienia (bez setupu):
+echo    - Użyj: start.bat
+echo.
+echo 🔍 Jeśli problemy:
+echo    - Diagnostyka: diagnoza_srodowiska.bat
+echo    - Instrukcje: INSTRUKCJA_INSTALACJI.md
 echo.
 echo Naciśnij dowolny klawisz aby zamknąć to okno...
 pause >nul
