@@ -1,14 +1,18 @@
 # webLIS - Kompletny przewodnik
 
-System analityczny z wykorzystaniem danych teledetekcyjnych dla leśnictwa.
+System a**📖 Szczegółowa instrukcja**: Zobacz `INSTRUKCJA_INSTALACJI.md`
+
+## 🏗️ ARCHITEKTURAkorzystaniem danych teledetekcyjnych dla leśnictwa.
 
 ## 🚀 SZYBKIE URUCHOMIENIE (Windows)
 
-### ⚡ Pierwszy raz (setup + start)
+### 🆕 Pierwszy raz na nowym komputerze
 
 ```bash
-git clone https://github.com/Taaxuus/lis.git
-cd lis
+# 1. Sprawdź czy masz wszystko zainstalowane
+.\diagnoza_srodowiska.bat
+
+# 2. Jeśli wszystko OK, uruchom setup
 .\setup_and_start.bat
 ```
 
@@ -26,7 +30,23 @@ cd lis
 
 ## 📋 WYMAGANIA
 
+**⚠️ UWAGA**: Przed pierwszym uruchomieniem musisz zainstalować:
+
 ### Oprogramowanie:
+
+- **Node.js** >= 18.0.0 ➜ https://nodejs.org/ (zaznacz "Add to PATH")
+- **Python** >= 3.8 ➜ https://python.org/ (zaznacz "Add Python to PATH")
+- **R** >= 4.0 ➜ https://r-project.org/ (standardowa instalacja)
+
+### 🔍 Sprawdź instalację:
+
+```bash
+node --version
+python --version  # lub: py --version
+# R zostanie znaleziony automatycznie
+```
+
+**📖 Szczegółowa instrukcja**: Zobacz `INSTRUKCJA_INSTALACJI.md`
 
 - **Node.js** >= 18.0.0
 - **Python** >= 3.11
